@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define MAXTHREADS 8
+#define MAXTHREADS 16
 
 // Use 200 million steps
 long num_steps = 200000000;
@@ -51,9 +51,9 @@ void *computePi(void *pArg)
     int i;
     int myNum = *((int *)pArg);
     
-	step = 1.0/(double) num_steps;
+	  step = 1.0/(double) num_steps;
     
-	for (i = myNum; i < num_steps; i+=nThreads) {
+	  for (i = myNum; i < num_steps; i+=nThreads) {
         x = (i+0.5)*step;
         sum += 4.0/(1.0 + x*x);
     }
