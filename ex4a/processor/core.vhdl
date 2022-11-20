@@ -98,6 +98,29 @@ component buffer_id_ex is
   );
 end component;
 
+component core_execute is
+   port (
+      -- Inputs
+      --- Control
+      alu_src: in bit;
+      alu_op: in bit_vector(1 downto 0);
+      --- Data 
+      pc: in bit_vector(31 downto 0);
+      read_data_1: in bit_vector(31 downto 0);
+      read_data_2: in bit_vector(31 downto 0);
+      imm: in bit_vector(31 downto 0);
+      funct7: in bit_vector(6 downto 0);
+      funct3: in bit_vector(2 downto 0);
+
+      -- Output
+      --- Control
+      zero: out bit;
+      --- Data
+      branch_pc: out bit_vector(31 downto 0); -- soma do pc com o immediato para o calculo do branch
+      alu_result: out bit_vector(31 downto 0);
+   );
+end component;
+
 component buffer_ex_mem is
   port (
     clk, rst: in bit;
@@ -171,6 +194,28 @@ signal ID_funct7: bit_vector(6 downto 0);
 signal ID_funct3: bit_vector(2 downto 0);
 signal ID_write_register: bit_vector(4 downto 0)
 
+
+--- Uses
+signal EX_alu_src: bit;
+signal EX_alu_op: bit_vector(1 downto 0);
+signal EX_pc: bit_vector(31 downto 0);
+signal EX_read_data_1: bit_vector(31 downto 0);
+signal EX_read_data_2: bit_vector(31 downto 0);
+signal EX_imm: bit_vector(31 downto 0);
+signal EX_funct7: bit_vector(6 downto 0);
+signal EX_funct3: bit_vector(2 downto 0);
+signal EX_zero: bit;
+signal EX_branch_pc: bit_vector(31 downto 0);
+signal EX_alu_result: bit_vector(31 downto 0);
+--- Pass thrgouth
+signal EX_branch: bit;
+signal EX_mem_read: bit;
+signal EX_mem_write: bit;
+signal EX_reg_write: bit;
+signal EX_mem_to_reg: bit;
+signal EX_write_register: bit_vector(4 downto 0);
+signal EX_opcode: bit_vector(6 downto 0);
+
 begin
 buffer_if_id_inst: buffer_if_id
   port map(
@@ -219,85 +264,101 @@ buffer_id_ex_inst: buffer_id_ex
     
     -- Control
     ID_alu_src => ID_alu_src,
-    EX_alu_src => ,
+    EX_alu_src => EX_alu_src,
 
     ID_alu_op => ID_alu_op,
-    EX_alu_op => ,
+    EX_alu_op => EX_alu_op,
 
     ID_branch => ID_branch,
-    EX_branch => ,
+    EX_branch => EX_branch,
 
     ID_mem_read => ID_mem_read,
-    EX_mem_read => ,
+    EX_mem_read => EX_mem_read,
 
     ID_mem_write => ID_mem_write,
-    EX_mem_write => ,
+    EX_mem_write => EX_mem_write,
 
     ID_reg_write => ID_reg_write,
-    EX_reg_write => ,
+    EX_reg_write => EX_reg_write,
 
     ID_mem_to_reg => ID_mem_to_reg,
-    EX_mem_to_reg => ,
+    EX_mem_to_reg => EX_mem_to_reg,
 
     --- Data 
     ID_pc => ID_pc,
-    EX_pc => ,
+    EX_pc => EX_pc,
 
     ID_read_data_1 => ID_read_data_1,
-    EX_read_data_1 => ,
+    EX_read_data_1 => EX_read_data_1,
 
     ID_read_data_2 => ID_read_data_2,
-    EX_read_data_2 => ,
+    EX_read_data_2 => EX_read_data_2,
 
     ID_imm => ID_imm,
-    EX_imm => ,
+    EX_imm => EX_imm,
 
     ID_funct7 => ID_funct7,
-    EX_funct7 => ,
+    EX_funct7 => EX_funct7,
 
     ID_funct3 => ID_funct3,
-    EX_funct3 => ,
+    EX_funct3 => EX_funct3,
 
+    -- useless
     ID_opcode => ID_opcode,
-    EX_opcode => ,
+    EX_opcode => EX_opcode,
 
     ID_write_register => ID_write_register,
-    EX_write_register => ,
+    EX_write_register => EX_write_register,
   );
+
+core_execute_inst: core_execute
+   port map(
+      alu_src => EX_alu_src,
+      alu_op => EX_alu_op,
+      pc => EX_pc,
+      read_data_1 => EX_read_data_1,
+      read_data_2 => EX_read_data_2,
+      imm => EX_imm,
+      funct7 => EX_funct7,
+      funct3 => EX_funct3,
+      zero => EX_zero,
+      branch_pc => EX_branch,
+      alu_result => EX_alu_result,
+   );
 
 buffer_ex_mem_inst: buffer_ex_mem
   port map(
     clk => clk,
     rst => rst,
     
-    EX_branch => ,
+    EX_branch => EX_branch,
     MEM_branch => ,
 
-    EX_mem_read => ,
+    EX_mem_read => EX_mem_read,
     MEM_mem_read => ,
 
-    EX_mem_write => ,
+    EX_mem_write => EX_mem_write,
     MEM_mem_write => ,
 
-    EX_reg_write => ,
+    EX_reg_write => EX_reg_write,
     MEM_reg_write => ,
 
-    EX_mem_to_reg => ,
+    EX_mem_to_reg => EX_mem_to_reg,
     MEM_mem_to_reg => ,
 
-    EX_zero => ,
+    EX_zero => EX_zero,
     MEM_zero => ,
 
-    EX_branch_pc => ,
+    EX_branch_pc => EX_branch_pc,
     MEM_branch_pc => ,
 
-    EX_alu_result => ,
+    EX_alu_result => EX_alu_result,
     MEM_alu_result => ,
 
-    EX_read_data_2 => ,
+    EX_read_data_2 => EX_read_data_2,
     MEM_read_data_2 => ,
 
-    EX_write_register => ,
+    EX_write_register => EX_write_register,
     MEM_write_register => ,
   );
 
