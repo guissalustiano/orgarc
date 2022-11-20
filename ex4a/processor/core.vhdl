@@ -198,6 +198,21 @@ component buffer_mem_wb is
   );
 end component;
 
+component core_write_back is
+   port (
+    -- Input
+    --- Control
+    mem_to_reg: in bit;
+    --- Data
+    read_data: in bit_vector(31 downto 0);
+    alu_result: in bit_vector(31 downto 0);
+
+    -- Output
+    --- Data
+    write_data: out bit_vector(31 downto 0)
+   );
+end component;
+
 signal ID_pc: bit_vector(31 downto 0);
 signal ID_instruction: bit_vector(31 downto 0);
 signal ID_alu_src: bit;
@@ -252,6 +267,16 @@ signal MEM_to_reg: bit;
 signal MEM_mem_to_reg: bit;
 signal MEM_write_register: bit_vector(4 downto 0);
 
+-- WB
+--- Uses
+signal WB_mem_to_reg: bit;
+signal WB_read_data: bit_vector(31 downto 0);
+signal WB_alu_result: bit_vector(31 downto 0);
+signal WB_write_data: bit_vector(31 downto 0)
+--- Pass through
+signal WB_reg_write: bit;
+signal WB_write_register: bit_vector(4 downto 0);
+
 begin
 buffer_if_id_inst: buffer_if_id
   port map(
@@ -271,9 +296,9 @@ core_decode_inst: core_decode
       rst => rst,
       --- Inputs
       instruction => ID_instruction,
-      WB_write_register => ,
-      WB_write_data => ,
-      WB_reg_write => ,
+      WB_write_register => WB_write_register,
+      WB_write_data => WB_write_register,
+      WB_reg_write => WB_reg_write,
 
       -- Output
       --- Control
@@ -424,19 +449,28 @@ buffer_mem_wb_inst: buffer_mem_wb
     rst => rst,
     
     MEM_reg_write => MEM_reg_write,
-    WB_reg_write => ,
+    WB_reg_write => WB_reg_write,
 
     MEM_mem_to_reg => MEM_mem_to_reg,
-    WB_mem_to_reg => ,
+    WB_mem_to_reg => WB_mem_to_reg,
 
     MEM_read_data => MEM_read_data,
-    WB_read_data => ,
+    WB_read_data => WB_read_data,
 
     MEM_alu_result => MEM_alu_result,
-    WB_alu_result => ,
+    WB_alu_result => WB_alu_result,
 
     MEM_write_register => MEM_write_register,
-    WB_write_register => ,
+    WB_write_register => WB_write_register,
   );
+
+core_write_back_inst: core_write_back
+   port map(
+    mem_to_reg => WB_mem_to_reg,
+    read_data => WB_read_data,
+    alu_result => WB_alu_result,
+    write_data => WB_write_data,
+   );
+end entity;
 
 end architecture;
