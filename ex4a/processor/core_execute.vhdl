@@ -1,3 +1,6 @@
+library ieee;
+use ieee.numeric_bit.all;
+
 entity core_execute is
    port (
       -- Inputs
@@ -17,12 +20,12 @@ entity core_execute is
       zero: out bit;
       --- Data
       branch_pc: out bit_vector(31 downto 0); -- soma do pc com o immediato para o calculo do branch
-      alu_result: out bit_vector(31 downto 0);
+      alu_result: out bit_vector(31 downto 0)
    );
 end entity;
 
 architecture arch of core_execute is
-  entity alu is
+  component alu is
     generic(
       size: natural := 32
     );
@@ -32,21 +35,21 @@ architecture arch of core_execute is
       S   : in  bit_vector(3 downto 0);
       Z, Ov, Co: out bit
     );
-  end entity;
+  end component;
 
-  entity alucontrol is
+  component alucontrol is
     port (
       aluop: in bit_vector(1 downto 0);
       funct7: in bit_vector(6 downto 0);
       funct3: in bit_vector(2 downto 0);
       alu_ctrl: out bit_vector(3 downto 0)
      );
-  end entity;
+  end component;
 
   signal alu_input_2: bit_vector(31 downto 0);
-  signal alu_ctrl: bit_vector(3 downto 0)
+  signal alu_ctrl: bit_vector(3 downto 0);
 begin
-  branch_pc <= unsigned(pc) + unsigned(imm);
+  branch_pc <= bit_vector(unsigned(pc) + unsigned(imm));
 
   alu_input_2 <= read_data_2 when alu_src = '0' else imm;
 
@@ -58,7 +61,7 @@ begin
       S => alu_ctrl,
       Z => zero,
       Ov => open,
-      Co => open,
+      Co => open
     );
       
   alucontrol_inst: alucontrol
@@ -66,6 +69,6 @@ begin
       aluop => alu_op,
       funct7 => funct7,
       funct3 => funct3,
-      alu_ctrl => alu_ctrl,
+      alu_ctrl => alu_ctrl
      );
-end architecture
+end architecture;

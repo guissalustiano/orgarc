@@ -16,4 +16,4 @@ end entity;
 architecture arch of core_write_back is
 begin
   write_data <= alu_result when mem_to_reg = '0' else read_data;
-end architecture
+end architecture;

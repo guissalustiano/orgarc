@@ -132,7 +132,7 @@ component core_execute is
       zero: out bit;
       --- Data
       branch_pc: out bit_vector(31 downto 0); -- soma do pc com o immediato para o calculo do branch
-      alu_result: out bit_vector(31 downto 0);
+      alu_result: out bit_vector(31 downto 0)
    );
 end component;
 
@@ -172,7 +172,7 @@ component buffer_ex_mem is
   );
 end component;
 
-entity core_memory_acess is
+component core_memory_acess is
    port (
       clk: in bit;
       -- Input
@@ -190,7 +190,7 @@ entity core_memory_acess is
       --- Data
       read_data: out bit_vector(31 downto 0)
    );
-end entity;
+end component;
 
 component buffer_mem_wb is
   port (
@@ -247,7 +247,8 @@ signal ID_read_data_2:bit_vector(31 downto 0);
 signal ID_imm: bit_vector(31 downto 0);
 signal ID_funct7: bit_vector(6 downto 0);
 signal ID_funct3: bit_vector(2 downto 0);
-signal ID_write_register: bit_vector(4 downto 0)
+signal ID_write_register: bit_vector(4 downto 0);
+signal ID_opcode: bit_vector(6 downto 0);
 
 
 --- Uses
@@ -280,19 +281,20 @@ signal MEM_mem_write: bit;
 signal MEM_alu_result: bit_vector(31 downto 0); -- address memory
 signal MEM_read_data_2: bit_vector(31 downto 0); -- write data memory
 signal MEM_pc_src: bit; -- branch & zero
-signal MEM_read_data: bit_vector(31 downto 0)
+signal MEM_read_data: bit_vector(31 downto 0);
 --- Pass through
 signal MEM_reg_write: bit;
 signal MEM_to_reg: bit;
 signal MEM_mem_to_reg: bit;
 signal MEM_write_register: bit_vector(4 downto 0);
+signal MEM_branch_pc: bit_vector(31 downto 0);
 
 -- WB
 --- Uses
 signal WB_mem_to_reg: bit;
 signal WB_read_data: bit_vector(31 downto 0);
 signal WB_alu_result: bit_vector(31 downto 0);
-signal WB_write_data: bit_vector(31 downto 0)
+signal WB_write_data: bit_vector(31 downto 0);
 --- Pass through
 signal WB_reg_write: bit;
 signal WB_write_register: bit_vector(4 downto 0);
@@ -305,13 +307,13 @@ core_fetch_inst: core_fetch
       rst => rst,
       -- Input
       --- Control
-      pc_src: MEM_pc_src;
+      pc_src => MEM_pc_src,
       --- Data
-      branch_pc: MEM_branch_pc;
+      branch_pc => MEM_branch_pc,
 
       -- Output
-      pc: IF_pc;
-      instruction: IF_instruction
+      pc => IF_pc,
+      instruction => IF_instruction
    );
 
 buffer_if_id_inst: buffer_if_id
@@ -323,7 +325,7 @@ buffer_if_id_inst: buffer_if_id
     ID_pc => ID_pc,
 
     IF_instruction => IF_instruction,
-    ID_instruction => ID_instruction,
+    ID_instruction => ID_instruction
   );
 
 core_decode_inst: core_decode
@@ -351,7 +353,7 @@ core_decode_inst: core_decode
       imm => ID_imm,
       funct7 => ID_funct7,
       funct3 => ID_funct3,
-      write_register => ID_write_register,
+      write_register => ID_write_register
    );
 
 buffer_id_ex_inst: buffer_id_ex
@@ -405,7 +407,7 @@ buffer_id_ex_inst: buffer_id_ex
     EX_opcode => EX_opcode,
 
     ID_write_register => ID_write_register,
-    EX_write_register => EX_write_register,
+    EX_write_register => EX_write_register
   );
 
 core_execute_inst: core_execute
@@ -419,8 +421,8 @@ core_execute_inst: core_execute
       funct7 => EX_funct7,
       funct3 => EX_funct3,
       zero => EX_zero,
-      branch_pc => EX_branch,
-      alu_result => EX_alu_result,
+      branch_pc => EX_branch_pc,
+      alu_result => EX_alu_result
    );
 
 buffer_ex_mem_inst: buffer_ex_mem
@@ -456,11 +458,11 @@ buffer_ex_mem_inst: buffer_ex_mem
     MEM_read_data_2 => MEM_read_data_2,
 
     EX_write_register => EX_write_register,
-    MEM_write_register => MEM_write_register,
+    MEM_write_register => MEM_write_register
   );
 
 core_memory_acess_inst: core_memory_acess
-   port (
+   port map(
       clk => clk,
       -- Input
       --- Control
@@ -475,9 +477,8 @@ core_memory_acess_inst: core_memory_acess
       --- Control
       pc_src => MEM_pc_src,
       --- Data
-      read_data => MEM_read_data,
+      read_data => MEM_read_data
    );
-end entity;
 
 buffer_mem_wb_inst: buffer_mem_wb
   port map(
@@ -497,7 +498,7 @@ buffer_mem_wb_inst: buffer_mem_wb
     WB_alu_result => WB_alu_result,
 
     MEM_write_register => MEM_write_register,
-    WB_write_register => WB_write_register,
+    WB_write_register => WB_write_register
   );
 
 core_write_back_inst: core_write_back
@@ -505,8 +506,7 @@ core_write_back_inst: core_write_back
     mem_to_reg => WB_mem_to_reg,
     read_data => WB_read_data,
     alu_result => WB_alu_result,
-    write_data => WB_write_data,
+    write_data => WB_write_data
    );
-end entity;
 
 end architecture;

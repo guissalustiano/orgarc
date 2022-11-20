@@ -49,7 +49,7 @@ begin
         d => next_pc,
         q => internal_pc
       );
-    pc_plus_4 <= bit_vector(unsigned(internal_pc) + to_unsiged(4, 32));
+    pc_plus_4 <= bit_vector(unsigned(internal_pc) + to_unsigned(4, 32));
     next_pc <= pc_plus_4 when pc_src = '0' else branch_pc;
 
     rom_inst: rom
