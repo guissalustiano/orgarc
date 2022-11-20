@@ -2,15 +2,18 @@ library ieee;
 use ieee.numeric_bit.all;
 
 entity reg is
+  generic(
+    size: natural := 32
+  );
   port(
     clk, rst: in bit;
-    d: in bit_vector(31 downto 0);
-    q: out bit_vector(31 downto 0)
+    d: in bit_vector(size-1 downto 0);
+    q: out bit_vector(size-1 downto 0)
   );
 end entity;
 
 architecture arch of reg is
-  signal value: bit_vector(31 downto 0);
+  signal value: bit_vector(size-1 downto 0);
 begin
   process(clk, rst)
   begin
