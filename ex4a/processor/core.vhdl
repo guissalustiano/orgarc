@@ -157,6 +157,26 @@ component buffer_ex_mem is
   );
 end component;
 
+entity core_memory_acess is
+   port (
+      clk: in bit;
+      -- Input
+      --- Control
+      branch: in bit;
+      zero: in bit;
+      mem_read: in bit;
+      mem_write: in bit;
+      --- Data
+      alu_result: in bit_vector(31 downto 0); -- address memory
+      read_data_2: in bit_vector(31 downto 0); -- write data memory
+      -- Output
+      --- Control
+      branch_happens: out bit; -- branch & zero
+      --- Data
+      read_data: out bit_vector(31 downto 0)
+   );
+end entity;
+
 component buffer_mem_wb is
   port (
     clk, rst: in bit;
@@ -215,6 +235,22 @@ signal EX_reg_write: bit;
 signal EX_mem_to_reg: bit;
 signal EX_write_register: bit_vector(4 downto 0);
 signal EX_opcode: bit_vector(6 downto 0);
+
+-- MEM
+--- Uses
+signal MEM_branch: bit;
+signal MEM_zero: bit;
+signal MEM_mem_read: bit;
+signal MEM_mem_write: bit;
+signal MEM_alu_result: bit_vector(31 downto 0); -- address memory
+signal MEM_read_data_2: bit_vector(31 downto 0); -- write data memory
+signal MEM_branch_happens: bit; -- branch & zero
+signal MEM_read_data: bit_vector(31 downto 0)
+--- Pass through
+signal MEM_reg_write: bit;
+signal MEM_to_reg: bit;
+signal MEM_mem_to_reg: bit;
+signal MEM_write_register: bit_vector(4 downto 0);
 
 begin
 buffer_if_id_inst: buffer_if_id
@@ -332,54 +368,74 @@ buffer_ex_mem_inst: buffer_ex_mem
     rst => rst,
     
     EX_branch => EX_branch,
-    MEM_branch => ,
+    MEM_branch => MEM_branch,
 
     EX_mem_read => EX_mem_read,
-    MEM_mem_read => ,
+    MEM_mem_read => MEM_mem_read,
 
     EX_mem_write => EX_mem_write,
-    MEM_mem_write => ,
+    MEM_mem_write => MEM_mem_write,
 
     EX_reg_write => EX_reg_write,
-    MEM_reg_write => ,
+    MEM_reg_write => MEM_reg_write,
 
     EX_mem_to_reg => EX_mem_to_reg,
-    MEM_mem_to_reg => ,
+    MEM_mem_to_reg => MEM_mem_to_reg,
 
     EX_zero => EX_zero,
-    MEM_zero => ,
+    MEM_zero => MEM_zero,
 
     EX_branch_pc => EX_branch_pc,
-    MEM_branch_pc => ,
+    MEM_branch_pc => MEM_branch_pc,
 
     EX_alu_result => EX_alu_result,
-    MEM_alu_result => ,
+    MEM_alu_result => MEM_alu_result,
 
     EX_read_data_2 => EX_read_data_2,
-    MEM_read_data_2 => ,
+    MEM_read_data_2 => MEM_read_data_2,
 
     EX_write_register => EX_write_register,
-    MEM_write_register => ,
+    MEM_write_register => MEM_write_register,
   );
+
+core_memory_acess_inst: core_memory_acess
+   port (
+      clk => clk,
+      -- Input
+      --- Control
+      branch => MEM_branch,
+      zero => MEM_zero,
+      mem_read => MEM_mem_read,
+      mem_write => MEM_mem_write,
+      --- Data
+      alu_result => MEM_alu_result,
+      read_data_2 => MEM_read_data_2,
+      -- Output
+      --- Control
+      branch_happens => MEM_branch_happens,
+      --- Data
+      read_data => MEM_read_data,
+   );
+end entity;
 
 buffer_mem_wb_inst: buffer_mem_wb
   port map(
     clk => clk,
     rst => rst,
     
-    MEM_reg_write => ,
+    MEM_reg_write => MEM_reg_write,
     WB_reg_write => ,
 
-    MEM_mem_to_reg => ,
+    MEM_mem_to_reg => MEM_mem_to_reg,
     WB_mem_to_reg => ,
 
-    MEM_read_data => ,
+    MEM_read_data => MEM_read_data,
     WB_read_data => ,
 
-    MEM_alu_result => ,
+    MEM_alu_result => MEM_alu_result,
     WB_alu_result => ,
 
-    MEM_write_register => ,
+    MEM_write_register => MEM_write_register,
     WB_write_register => ,
   );
 
