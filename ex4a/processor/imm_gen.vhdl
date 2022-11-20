@@ -7,7 +7,7 @@ entity imm_gen is
     word_size : natural := 32
   );
   port(
-    intruction: in  bit_vector(31 downto 0);
+    instruction: in  bit_vector(31 downto 0);
     immediate: out bit_vector(word_size-1 downto 0)
   );
 end entity;
@@ -17,8 +17,8 @@ architecture arch of imm_gen is
   signal intr_sig: signed(31 downto 0);
   signal imm, imm_r, imm_i, imm_s, imm_sb, imm_u, imm_uj: signed(word_size-1 downto 0);
 begin
-  opcode <= intruction(6 downto 0);
-  intr_sig <= signed(intruction);
+  opcode <= instruction(6 downto 0);
+  intr_sig <= signed(instruction);
 
   imm_r  <= resize("0", word_size);
   imm_i  <= resize(intr_sig(31 downto 20), word_size);

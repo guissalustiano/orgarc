@@ -9,7 +9,7 @@ entity regfile is
     word_size : natural := 32
   );
   port(
-    clk, rst, regWrite: in bit;
+    clk, rst, reg_write: in bit;
     rr1, rr2, wr: in bit_vector(natural(ceil(log2(real(regn))))-1 downto 0);
     d: in bit_vector(word_size-1 downto 0);
     q1, q2: out bit_vector(word_size-1 downto 0)
@@ -34,7 +34,7 @@ begin
     if rst='1' then
         regbank <= (others => (others => '0'));
     elsif rising_edge(clk) then
-      if regWrite='1' and wr_int > 0 then
+      if reg_write='1' and wr_int > 0 then
         regbank(wr_int) <= d;
       end if;
     end if;

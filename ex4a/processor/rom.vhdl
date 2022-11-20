@@ -21,7 +21,7 @@ architecture de_arquivo of rom is
   --! Funcao que le o arquivo e preenche uma matriz temporaria
   --! Saida: matriz identica ao mem_t, preenchida com os valores do arquivo
   impure function inicializa(nome_do_arquivo : in string) return mem_t is
-    file     arquivo  : text open read_mode is file_name;
+    file     arquivo  : text open read_mode is nome_do_arquivo;
     variable linha    : line;
     variable temp_bv  : bit_vector(3 downto 0);
     variable temp_mem : mem_t;
@@ -38,7 +38,7 @@ architecture de_arquivo of rom is
       return temp_mem;
     end;
   --! Delaracao da matriz de memoria em si, note que foi chamada a funcao para preenche-la.  
-  constant mem : mem_t := inicializa();
+  constant mem : mem_t := inicializa(file_name);
 begin
-  data <= mem(to_integer(unsigned(addr)));
+  read_data <= mem(to_integer(unsigned(address)));
 end de_arquivo;
