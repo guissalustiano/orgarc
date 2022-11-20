@@ -12,7 +12,7 @@ entity rom is
       address   : in  bit_vector(address_size-1 downto 0);
       read_data : out bit_vector(word_size-1 downto 0)
    );
-end rom;
+ end entity;
 
 architecture de_arquivo of rom is
   constant depth : natural := 2**address_size;

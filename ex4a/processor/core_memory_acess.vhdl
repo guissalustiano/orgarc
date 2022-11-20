@@ -12,7 +12,7 @@ entity core_memory_acess is
       read_data_2: in bit_vector(31 downto 0); -- write data memory
       -- Output
       --- Control
-      branch_happens: out bit; -- branch & zero
+      pc_src: out bit; -- branch & zero
       --- Data
       read_data: out bit_vector(31 downto 0)
    );
@@ -30,7 +30,7 @@ architecture arch of core_memory_acess is
      );
    end component;
 begin
-  branch_happens <= branch and zero;
+  pc_src <= branch and zero;
 
   ram_inst: ram 
     port map(

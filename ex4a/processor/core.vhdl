@@ -5,6 +5,21 @@ entity core is
 end entity;
 
 architecture arch of core is
+component core_fetch is
+   port (
+      clk, rst: in bit;
+      -- Input
+      --- Control
+      pc_src: in bit;
+      --- Data
+      branch_pc: in bit_vector(31 downto 0);
+
+      -- Output
+      pc: out bit_vector(31 downto 0);
+      instruction: out bit_vector(31 downto 0)
+   );
+end component;
+
 component buffer_if_id is
   port (
     clk, rst: in bit;
@@ -171,7 +186,7 @@ entity core_memory_acess is
       read_data_2: in bit_vector(31 downto 0); -- write data memory
       -- Output
       --- Control
-      branch_happens: out bit; -- branch & zero
+      pc_src: out bit; -- branch & zero
       --- Data
       read_data: out bit_vector(31 downto 0)
    );
@@ -213,6 +228,11 @@ component core_write_back is
    );
 end component;
 
+-- IF
+signal IF_pc: bit_vector(31 downto 0);
+signal IF_instruction: bit_vector(31 downto 0);
+
+-- ID
 signal ID_pc: bit_vector(31 downto 0);
 signal ID_instruction: bit_vector(31 downto 0);
 signal ID_alu_src: bit;
@@ -259,7 +279,7 @@ signal MEM_mem_read: bit;
 signal MEM_mem_write: bit;
 signal MEM_alu_result: bit_vector(31 downto 0); -- address memory
 signal MEM_read_data_2: bit_vector(31 downto 0); -- write data memory
-signal MEM_branch_happens: bit; -- branch & zero
+signal MEM_pc_src: bit; -- branch & zero
 signal MEM_read_data: bit_vector(31 downto 0)
 --- Pass through
 signal MEM_reg_write: bit;
@@ -278,15 +298,31 @@ signal WB_reg_write: bit;
 signal WB_write_register: bit_vector(4 downto 0);
 
 begin
+
+core_fetch_inst: core_fetch
+   port map(
+      clk => clk,
+      rst => rst,
+      -- Input
+      --- Control
+      pc_src: MEM_pc_src;
+      --- Data
+      branch_pc: MEM_branch_pc;
+
+      -- Output
+      pc: IF_pc;
+      instruction: IF_instruction
+   );
+
 buffer_if_id_inst: buffer_if_id
   port map(
     clk => clk,
     rst => rst,
     
-    IF_pc => ,
+    IF_pc => IF_pc,
     ID_pc => ID_pc,
 
-    IF_instruction => ,
+    IF_instruction => IF_instruction,
     ID_instruction => ID_instruction,
   );
 
@@ -297,7 +333,7 @@ core_decode_inst: core_decode
       --- Inputs
       instruction => ID_instruction,
       WB_write_register => WB_write_register,
-      WB_write_data => WB_write_register,
+      WB_write_data => WB_write_data,
       WB_reg_write => WB_reg_write,
 
       -- Output
@@ -437,7 +473,7 @@ core_memory_acess_inst: core_memory_acess
       read_data_2 => MEM_read_data_2,
       -- Output
       --- Control
-      branch_happens => MEM_branch_happens,
+      pc_src => MEM_pc_src,
       --- Data
       read_data => MEM_read_data,
    );
