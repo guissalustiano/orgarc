@@ -28,6 +28,12 @@ entity buffer_id_ex is
     ID_pc: in bit_vector(31 downto 0);
     EX_pc: out bit_vector(31 downto 0);
 
+    ID_read_register_1: in bit_vector(4 downto 0);
+    EX_read_register_1: out bit_vector(4 downto 0);
+
+    ID_read_register_2: in bit_vector(4 downto 0);
+    EX_read_register_2: out bit_vector(4 downto 0);
+
     ID_read_data_1: in bit_vector(31 downto 0);
     EX_read_data_1: out bit_vector(31 downto 0);
 
@@ -134,6 +140,22 @@ begin
         d => ID_pc,
         q => EX_pc
       );
+
+    buffer_read_register_1: reg generic map(size => 5)
+      port map(
+      clk => clk,
+      rst => rst,
+      d => ID_read_register_1,
+      q => EX_read_register_1
+    );
+
+    buffer_read_register_2: reg generic map(size => 5)
+      port map(
+      clk => clk,
+      rst => rst,
+      d => ID_read_register_2,
+      q => EX_read_register_2
+    );
 
     buffer_read_data_1: reg generic map(size => 32)
       port map(

@@ -51,6 +51,8 @@ component core_decode is
       reg_write: out bit;
       mem_to_reg: out bit;
       --- Data 
+      read_register_1: out bit_vector(4 downto 0);
+      read_register_2: out bit_vector(4 downto 0);
       read_data_1: out bit_vector(31 downto 0);
       read_data_2:out bit_vector(31 downto 0);
       imm: out bit_vector(31 downto 0);
@@ -89,6 +91,12 @@ component buffer_id_ex is
     --- Data 
     ID_pc: in bit_vector(31 downto 0);
     EX_pc: out bit_vector(31 downto 0);
+
+    ID_read_register_1: in bit_vector(4 downto 0);
+    EX_read_register_1: out bit_vector(4 downto 0);
+
+    ID_read_register_2: in bit_vector(4 downto 0);
+    EX_read_register_2: out bit_vector(4 downto 0);
 
     ID_read_data_1: in bit_vector(31 downto 0);
     EX_read_data_1: out bit_vector(31 downto 0);
@@ -228,6 +236,21 @@ component core_write_back is
    );
 end component;
 
+component fowarding_unit is
+  port(
+    -- Inputs
+    EX_read_register_1: in bit_vector(4 downto 0);
+    EX_read_register_2: in bit_vector(4 downto 0);
+    MEM_reg_write: in bit;
+    MEM_write_register: in bit_vector(4 downto 0);
+    WB_write_register: in bit_vector(4 downto 0);
+
+    -- Outputs
+    foward_ula_input_a: out bit_vector(1 downto 0);
+    foward_ula_input_b: out bit_vector(1 downto 0)
+  );
+end component;
+
 -- IF
 signal IF_pc: bit_vector(31 downto 0);
 signal IF_instruction: bit_vector(31 downto 0);
@@ -242,6 +265,8 @@ signal ID_mem_read: bit;
 signal ID_mem_write: bit;
 signal ID_reg_write: bit;
 signal ID_mem_to_reg: bit;
+signal ID_read_register_1: bit_vector(4 downto 0);
+signal ID_read_register_2: bit_vector(4 downto 0);
 signal ID_read_data_1: bit_vector(31 downto 0);
 signal ID_read_data_2:bit_vector(31 downto 0);
 signal ID_imm: bit_vector(31 downto 0);
@@ -264,6 +289,8 @@ signal EX_zero: bit;
 signal EX_branch_pc: bit_vector(31 downto 0);
 signal EX_alu_result: bit_vector(31 downto 0);
 --- Pass thrgouth
+signal EX_read_register_1: bit_vector(4 downto 0);
+signal EX_read_register_2: bit_vector(4 downto 0);
 signal EX_branch: bit;
 signal EX_mem_read: bit;
 signal EX_mem_write: bit;
@@ -298,6 +325,12 @@ signal WB_write_data: bit_vector(31 downto 0);
 --- Pass through
 signal WB_reg_write: bit;
 signal WB_write_register: bit_vector(4 downto 0);
+
+-- Fowarding
+signal FW_src_ula_a: bit_vector(1 downto 0);
+signal FW_src_ula_b: bit_vector(1 downto 0);
+signal FW_ula_a: bit_vector(31 downto 0);
+signal FW_ula_b: bit_vector(31 downto 0);
 
 begin
 
@@ -340,6 +373,8 @@ core_decode_inst: core_decode
 
       -- Output
       --- Control
+      read_register_1 => ID_read_register_1,
+      read_register_2 => ID_read_register_2,
       alu_src => ID_alu_src,
       alu_op => ID_alu_op,
       branch => ID_branch,
@@ -387,6 +422,12 @@ buffer_id_ex_inst: buffer_id_ex
     ID_pc => ID_pc,
     EX_pc => EX_pc,
 
+    ID_read_register_1 => ID_read_register_1,
+    EX_read_register_1 => EX_read_register_1,
+
+    ID_read_register_2 => ID_read_register_2,
+    EX_read_register_2 => EX_read_register_2,
+
     ID_read_data_1 => ID_read_data_1,
     EX_read_data_1 => EX_read_data_1,
 
@@ -410,13 +451,37 @@ buffer_id_ex_inst: buffer_id_ex
     EX_write_register => EX_write_register
   );
 
+fowarding_unit_inst: fowarding_unit
+  port map(
+    -- Inputs
+    EX_read_register_1 => EX_read_register_1,
+    EX_read_register_2 => EX_read_register_2,
+    MEM_reg_write => MEM_reg_write,
+    MEM_write_register => MEM_write_register,
+    WB_write_register => WB_write_register,
+
+    -- Outputs
+    foward_ula_input_a => FW_src_ula_a,
+    foward_ula_input_b => FW_src_ula_b
+  );
+
+  FW_ula_a <= EX_read_data_1 when FW_src_ula_a = "00" else
+              WB_write_data  when FW_src_ula_a = "01" else
+              MEM_alu_result when FW_src_ula_a = "10" else -- address
+              (others => '0');
+
+  FW_ula_b <= EX_read_data_2 when FW_src_ula_b = "00" else
+              WB_write_data  when FW_src_ula_b = "01" else
+              MEM_alu_result when FW_src_ula_b = "10" else -- address
+              (others => '0');
+
 core_execute_inst: core_execute
    port map(
       alu_src => EX_alu_src,
       alu_op => EX_alu_op,
       pc => EX_pc,
-      read_data_1 => EX_read_data_1,
-      read_data_2 => EX_read_data_2,
+      read_data_1 => FW_ula_a,
+      read_data_2 => FW_ula_b,
       imm => EX_imm,
       funct7 => EX_funct7,
       funct3 => EX_funct3,

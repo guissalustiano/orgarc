@@ -22,6 +22,8 @@ entity core_decode is
       reg_write: out bit;
       mem_to_reg: out bit;
       --- Data 
+      read_register_1: out bit_vector(4 downto 0);
+      read_register_2: out bit_vector(4 downto 0);
       read_data_1: out bit_vector(31 downto 0);
       read_data_2:out bit_vector(31 downto 0);
       imm: out bit_vector(31 downto 0);
@@ -72,7 +74,7 @@ architecture arch of core_decode is
 
 
   signal opcode: bit_vector(6 downto 0);
-  signal read_register_1, read_register_2: bit_vector(4 downto 0);
+  signal read_register_1_internal, read_register_2_internal: bit_vector(4 downto 0);
 begin
     opcode <= instruction(6 downto 0);
     funct7 <= instruction(31 downto 25);
@@ -90,8 +92,8 @@ begin
         mem_to_reg => mem_to_reg
       );
 
-    read_register_1 <= instruction(19 downto 15);
-    read_register_2 <= instruction(24 downto 20);
+    read_register_1_internal <= instruction(19 downto 15);
+    read_register_2_internal <= instruction(24 downto 20);
     -- sera propagado para os proximos estados
     write_register  <= instruction(11 downto 7);
 
@@ -99,8 +101,8 @@ begin
     port map(
       clk => clk,
       rst => rst,
-      rr1 => read_register_1,
-      rr2 => read_register_2,
+      rr1 => read_register_1_internal,
+      rr2 => read_register_2_internal,
       q1 => read_data_1,
       q2 => read_data_2,
       -- utiliza o estado de write back
@@ -108,6 +110,8 @@ begin
       wr => WB_write_register,
       d => WB_write_data
     );
+  read_register_1 <= read_register_1_internal;
+  read_register_2 <= read_register_2_internal;
 
   imm_gen_inst: imm_gen  generic map(word_size => 32)
     port map(
