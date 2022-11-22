@@ -8,6 +8,7 @@ architecture arch of core is
 component core_fetch is
    port (
       clk, rst: in bit;
+      pc_enable: in bit;
       -- Input
       --- Control
       pc_src: in bit;
@@ -23,12 +24,28 @@ end component;
 component buffer_if_id is
   port (
     clk, rst: in bit;
+    enable: in bit;
     
     IF_pc: in bit_vector(31 downto 0);
     ID_pc: out bit_vector(31 downto 0);
 
     IF_instruction: in bit_vector(31 downto 0);
     ID_instruction: out bit_vector(31 downto 0)
+  );
+end component;
+
+component hazard_detection_unit is
+  port(
+    -- Input
+    EX_mem_read: in bit;
+    EX_write_register: in bit_vector(4 downto 0);
+    ID_read_register_1: in bit_vector(4 downto 0);
+    ID_read_register_2: in bit_vector(4 downto 0)
+
+    -- Output
+    pc_write: out bit;
+    buffer_write_if_id: out bit;
+    stall: out bit;
   );
 end component;
 
@@ -332,12 +349,27 @@ signal FW_src_ula_b: bit_vector(1 downto 0);
 signal FW_ula_a: bit_vector(31 downto 0);
 signal FW_ula_b: bit_vector(31 downto 0);
 
+-- Hazard detection
+signal HZ_pc_write: bit;
+signal HZ_buffer_write_if_id: bit;
+signal HZ_stall: bit;
+
+--- Control unit
+signal HZ_alu_src: bit;
+signal HZ_alu_op: bit_vector(1 downto 0);
+signal HZ_branch: bit;
+signal HZ_mem_read: bit;
+signal HZ_mem_write: bit;
+signal HZ_reg_write: bit;
+signal HZ_mem_to_reg: bit;
+
 begin
 
 core_fetch_inst: core_fetch
    port map(
       clk => clk,
       rst => rst,
+      pc_enable => HZ_pc_write,
       -- Input
       --- Control
       pc_src => MEM_pc_src,
@@ -353,12 +385,27 @@ buffer_if_id_inst: buffer_if_id
   port map(
     clk => clk,
     rst => rst,
+    enable => HZ_buffer_write_if_id,
     
     IF_pc => IF_pc,
     ID_pc => ID_pc,
 
     IF_instruction => IF_instruction,
     ID_instruction => ID_instruction
+  );
+
+hazard_detection_unit_inst: hazard_detection_unit
+  port map(
+    -- Input
+    EX_mem_read => EX_mem_read,
+    EX_write_register => EX_write_register,
+    ID_read_register_1 => ID_read_register_1,
+    ID_read_register_2 => ID_read_register_1,
+
+    -- Output
+    pc_write => HZ_pc_write,
+    buffer_write_if_id => HZ_buffer_write_if_id,
+    stall => HZ_flush
   );
 
 core_decode_inst: core_decode
@@ -391,31 +438,40 @@ core_decode_inst: core_decode
       write_register => ID_write_register
    );
 
+-- if has hazard then ground all control signals
+ HZ_alu_src <= ID_alu_src when HZ_stall = '0' else '0';
+ HZ_alu_op <= ID_alu_op when HZ_stall = '0' else "00";
+ HZ_branch <= ID_branch when HZ_stall = '0' else '0';
+ HZ_mem_read <= ID_mem_read when HZ_stall = '0' else '0';
+ HZ_mem_write <= ID_mem_write when HZ_stall = '0' else '0';
+ HZ_reg_write <= ID_reg_write when HZ_stall = '0' else '0';
+ HZ_mem_to_reg <= ID_mem_to_reg when HZ_stall = '0' else '0';
+
 buffer_id_ex_inst: buffer_id_ex
   port map(
     clk => clk,
     rst => rst,
     
     -- Control
-    ID_alu_src => ID_alu_src,
+    ID_alu_src => HZ_alu_src,
     EX_alu_src => EX_alu_src,
 
-    ID_alu_op => ID_alu_op,
+    ID_alu_op => HZ_alu_op,
     EX_alu_op => EX_alu_op,
 
-    ID_branch => ID_branch,
+    ID_branch => HZ_branch,
     EX_branch => EX_branch,
 
-    ID_mem_read => ID_mem_read,
+    ID_mem_read => HZ_mem_read,
     EX_mem_read => EX_mem_read,
 
-    ID_mem_write => ID_mem_write,
+    ID_mem_write => HZ_mem_write,
     EX_mem_write => EX_mem_write,
 
-    ID_reg_write => ID_reg_write,
+    ID_reg_write => HZ_reg_write,
     EX_reg_write => EX_reg_write,
 
-    ID_mem_to_reg => ID_mem_to_reg,
+    ID_mem_to_reg => HZ_mem_to_reg,
     EX_mem_to_reg => EX_mem_to_reg,
 
     --- Data 

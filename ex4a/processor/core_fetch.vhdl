@@ -6,6 +6,7 @@ entity core_fetch is
       clk, rst: in bit;
       -- Input
       --- Control
+      pc_enable: in bit;
       pc_src: in bit;
       --- Data
       branch_pc: in bit_vector(31 downto 0);
@@ -17,12 +18,13 @@ entity core_fetch is
 end entity;
 
 architecture arch of core_fetch is
-component reg is
+component reg_enable is
   generic(
     size: natural := 32
   );
   port(
     clk, rst: in bit;
+    en: in bit;
     d: in bit_vector(size-1 downto 0);
     q: out bit_vector(size-1 downto 0)
   );
@@ -42,10 +44,11 @@ end component;
 
 signal internal_pc, pc_plus_4, next_pc: bit_vector(31 downto 0);
 begin
-    reg_pc: reg
+    reg_pc: reg_enable
       port map(
         clk => clk, 
         rst => rst,
+        en => pc_enable,
         d => next_pc,
         q => internal_pc
       );
