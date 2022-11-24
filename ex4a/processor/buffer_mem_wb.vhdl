@@ -1,6 +1,9 @@
 entity buffer_mem_wb is
   port (
-    clk, rst: in bit;
+      clk: in bit; 
+      rst: in bit; -- reset assincrono
+      flush: in bit; -- reset sincrono
+      enable: in bit;
     
       MEM_reg_write: in bit;
       WB_reg_write: out bit;
@@ -25,7 +28,10 @@ architecture arch of buffer_mem_wb is
       size: natural := 32
     );
     port(
-      clk, rst: in bit;
+      clk: in bit;
+      rst: in bit; -- reset sincrono
+      clr: in bit; -- reset assincrono
+      en: in bit; -- enable
       d: in bit_vector(size-1 downto 0);
       q: out bit_vector(size-1 downto 0)
     );
@@ -33,7 +39,10 @@ architecture arch of buffer_mem_wb is
 
   component reg1 is
     port(
-      clk, rst: in bit;
+      clk: in bit;
+      rst: in bit; -- reset sincrono
+      clr: in bit; -- reset assincrono
+      en: in bit; -- enable
       d: in bit;
       q: out bit
     );
@@ -42,7 +51,9 @@ begin
       buffer_reg_write: reg1
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => MEM_reg_write,
         q => WB_reg_write
       );
@@ -50,7 +61,9 @@ begin
       buffer_mem_to_reg: reg1
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => MEM_mem_to_reg,
         q => WB_mem_to_reg
       );
@@ -58,7 +71,9 @@ begin
       buffer_read_data: reg generic map(size => 32)
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => MEM_read_data,
         q => WB_read_data
       );
@@ -66,7 +81,9 @@ begin
       buffer_alu_result: reg generic map(size => 32)
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => MEM_alu_result,
         q => WB_alu_result
       );
@@ -74,7 +91,9 @@ begin
       buffer_write_register: reg generic map(size => 5)
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => MEM_write_register,
         q => WB_write_register
       );

@@ -6,7 +6,10 @@ entity reg is
     size: natural := 32
   );
   port(
-    clk, rst: in bit;
+    clk: in bit;
+    rst: in bit; -- reset sincrono
+    clr: in bit; -- reset assincrono
+    en: in bit; -- enable
     d: in bit_vector(size-1 downto 0);
     q: out bit_vector(size-1 downto 0)
   );
@@ -17,10 +20,14 @@ architecture arch of reg is
 begin
   process(clk, rst)
   begin
-    if rst='1' then
+    if clr='1' then
         value <= (others => '0');
     elsif rising_edge(clk) then
-        value <= d;
+        if rst='1' then
+          value <= (others => '0');
+        elsif en='1' then
+          value <= d;
+        end if;
     end if;
   end process;
   q <= value;

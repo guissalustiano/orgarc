@@ -3,7 +3,10 @@ use ieee.numeric_bit.all;
 
 entity reg1 is
   port(
-    clk, rst: in bit;
+    clk: in bit;
+    rst: in bit; -- reset sincrono
+    clr: in bit; -- reset assincrono
+    en: in bit; -- enable
     d: in bit;
     q: out bit
   );
@@ -14,10 +17,14 @@ architecture arch of reg1 is
 begin
   process(clk, rst)
   begin
-    if rst='1' then
-        value <= '0';
+    if clr='1' then
+      value <= '0';
     elsif rising_edge(clk) then
+      if rst='1' then
+        value <= '0';
+      else
         value <= d;
+      end if;
     end if;
   end process;
   q <= value;

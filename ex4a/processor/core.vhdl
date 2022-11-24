@@ -23,7 +23,9 @@ end component;
 
 component buffer_if_id is
   port (
-    clk, rst: in bit;
+    clk: in bit; 
+    rst: in bit; -- reset assincrono
+    flush: in bit; -- reset sincrono
     enable: in bit;
     
     IF_pc: in bit_vector(31 downto 0);
@@ -81,7 +83,10 @@ end component;
 
 component buffer_id_ex is
   port (
-    clk, rst: in bit;
+    clk: in bit; 
+    rst: in bit; -- reset assincrono
+    flush: in bit; -- reset sincrono
+    enable: in bit;
     
     -- Control
     ID_alu_src: in bit;
@@ -164,7 +169,10 @@ end component;
 
 component buffer_ex_mem is
   port (
-    clk, rst: in bit;
+    clk: in bit; 
+    rst: in bit; -- reset assincrono
+    flush: in bit; -- reset sincrono
+    enable: in bit;
     
     EX_pc_src: in bit;
     MEM_pc_src: out bit;
@@ -213,7 +221,10 @@ end component;
 
 component buffer_mem_wb is
   port (
-    clk, rst: in bit;
+      clk: in bit; 
+      rst: in bit; -- reset assincrono
+      flush: in bit; -- reset sincrono
+      enable: in bit;
     
       MEM_reg_write: in bit;
       WB_reg_write: out bit;
@@ -377,6 +388,7 @@ buffer_if_id_inst: buffer_if_id
   port map(
     clk => clk,
     rst => rst,
+    flush => '0',
     enable => HZ_buffer_write_if_id,
     
     IF_pc => IF_pc,
@@ -443,6 +455,8 @@ buffer_id_ex_inst: buffer_id_ex
   port map(
     clk => clk,
     rst => rst,
+    flush => '0',
+    enable => '1',
     
     -- Control
     ID_alu_src => HZ_alu_src,
@@ -543,6 +557,8 @@ buffer_ex_mem_inst: buffer_ex_mem
   port map(
     clk => clk,
     rst => rst,
+    flush => '0',
+    enable => '1',
     
     EX_pc_src => EX_pc_src,
     MEM_pc_src => MEM_pc_src,
@@ -591,6 +607,8 @@ buffer_mem_wb_inst: buffer_mem_wb
   port map(
     clk => clk,
     rst => rst,
+    flush => '0',
+    enable => '1',
     
     MEM_reg_write => MEM_reg_write,
     WB_reg_write => WB_reg_write,

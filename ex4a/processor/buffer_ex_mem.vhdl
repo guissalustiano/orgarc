@@ -1,6 +1,9 @@
 entity buffer_ex_mem is
   port (
-    clk, rst: in bit;
+    clk: in bit; 
+    rst: in bit; -- reset assincrono
+    flush: in bit; -- reset sincrono
+    enable: in bit;
     
     EX_pc_src: in bit;
     MEM_pc_src: out bit;
@@ -37,7 +40,10 @@ architecture arch of buffer_ex_mem is
       size: natural := 32
     );
     port(
-      clk, rst: in bit;
+      clk: in bit;
+      rst: in bit; -- reset sincrono
+      clr: in bit; -- reset assincrono
+      en: in bit; -- enable
       d: in bit_vector(size-1 downto 0);
       q: out bit_vector(size-1 downto 0)
     );
@@ -45,7 +51,10 @@ architecture arch of buffer_ex_mem is
 
   component reg1 is
     port(
-      clk, rst: in bit;
+      clk: in bit;
+      rst: in bit; -- reset sincrono
+      clr: in bit; -- reset assincrono
+      en: in bit; -- enable
       d: in bit;
       q: out bit
     );
@@ -54,7 +63,9 @@ begin
     buffer_pc_src: reg1
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => EX_pc_src,
         q => MEM_pc_src
       );
@@ -62,7 +73,9 @@ begin
     buffer_mem_read: reg1
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => EX_mem_read,
         q => MEM_mem_read
       );
@@ -70,7 +83,9 @@ begin
     buffer_mem_write: reg1 
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => EX_mem_write,
         q => MEM_mem_write
       );
@@ -78,7 +93,9 @@ begin
     buffer_reg_write:reg1 
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => EX_reg_write,
         q => MEM_reg_write
       );
@@ -86,7 +103,9 @@ begin
     buffer_mem_to_reg: reg1 
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => EX_mem_to_reg,
         q => MEM_mem_to_reg
       );
@@ -94,7 +113,9 @@ begin
     buffer_branch_pc: reg generic map(size => 32)
     port map(
       clk => clk,
-      rst => rst,
+      rst => flush,
+      clr => rst,
+      en => enable,
       d => EX_branch_pc,
       q => MEM_branch_pc
     );
@@ -102,7 +123,9 @@ begin
     buffer_alu_result: reg generic map(size => 32)
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => EX_alu_result,
         q => MEM_alu_result
       );
@@ -110,7 +133,9 @@ begin
     buffer_read_data_2: reg generic map(size => 32)
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => EX_read_data_2,
         q => MEM_read_data_2
       );
@@ -118,7 +143,9 @@ begin
     buffer_write_register: reg generic map(size => 5)
       port map(
         clk => clk,
-        rst => rst,
+        rst => flush,
+        clr => rst,
+        en => enable,
         d => EX_write_register,
         q => MEM_write_register
       );
