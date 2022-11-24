@@ -2,8 +2,8 @@ entity buffer_ex_mem is
   port (
     clk, rst: in bit;
     
-    EX_branch: in bit;
-    MEM_branch: out bit;
+    EX_pc_src: in bit;
+    MEM_pc_src: out bit;
 
     EX_mem_read: in bit;
     MEM_mem_read: out bit;
@@ -16,9 +16,6 @@ entity buffer_ex_mem is
 
     EX_mem_to_reg: in bit;
     MEM_mem_to_reg: out bit;
-
-    EX_zero: in bit;
-    MEM_zero: out bit;
 
     EX_branch_pc: in bit_vector(31 downto 0);
     MEM_branch_pc: out bit_vector(31 downto 0);
@@ -54,12 +51,12 @@ architecture arch of buffer_ex_mem is
     );
   end component;
 begin
-    buffer_branch: reg1
+    buffer_pc_src: reg1
       port map(
         clk => clk,
         rst => rst,
-        d => EX_branch,
-        q => MEM_branch
+        d => EX_pc_src,
+        q => MEM_pc_src
       );
 
     buffer_mem_read: reg1
@@ -92,14 +89,6 @@ begin
         rst => rst,
         d => EX_mem_to_reg,
         q => MEM_mem_to_reg
-      );
-
-    buffer_zero: reg1 
-      port map(
-        clk => clk,
-        rst => rst,
-        d => EX_zero,
-        q => MEM_zero
       );
 
     buffer_branch_pc: reg generic map(size => 32)

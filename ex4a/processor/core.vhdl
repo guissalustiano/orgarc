@@ -40,12 +40,12 @@ component hazard_detection_unit is
     EX_mem_read: in bit;
     EX_write_register: in bit_vector(4 downto 0);
     ID_read_register_1: in bit_vector(4 downto 0);
-    ID_read_register_2: in bit_vector(4 downto 0)
+    ID_read_register_2: in bit_vector(4 downto 0);
 
     -- Output
     pc_write: out bit;
     buffer_write_if_id: out bit;
-    stall: out bit;
+    stall: out bit
   );
 end component;
 
@@ -144,6 +144,7 @@ component core_execute is
       --- Control
       alu_src: in bit;
       alu_op: in bit_vector(1 downto 0);
+      branch: in bit;
       --- Data 
       pc: in bit_vector(31 downto 0);
       read_data_1: in bit_vector(31 downto 0);
@@ -154,7 +155,7 @@ component core_execute is
 
       -- Output
       --- Control
-      zero: out bit;
+      pc_src: out bit;
       --- Data
       branch_pc: out bit_vector(31 downto 0); -- soma do pc com o immediato para o calculo do branch
       alu_result: out bit_vector(31 downto 0)
@@ -165,8 +166,8 @@ component buffer_ex_mem is
   port (
     clk, rst: in bit;
     
-    EX_branch: in bit;
-    MEM_branch: out bit;
+    EX_pc_src: in bit;
+    MEM_pc_src: out bit;
 
     EX_mem_read: in bit;
     MEM_mem_read: out bit;
@@ -179,9 +180,6 @@ component buffer_ex_mem is
 
     EX_mem_to_reg: in bit;
     MEM_mem_to_reg: out bit;
-
-    EX_zero: in bit;
-    MEM_zero: out bit;
 
     EX_branch_pc: in bit_vector(31 downto 0);
     MEM_branch_pc: out bit_vector(31 downto 0);
@@ -202,16 +200,12 @@ component core_memory_acess is
       clk: in bit;
       -- Input
       --- Control
-      branch: in bit;
-      zero: in bit;
       mem_read: in bit;
       mem_write: in bit;
       --- Data
       alu_result: in bit_vector(31 downto 0); -- address memory
       read_data_2: in bit_vector(31 downto 0); -- write data memory
       -- Output
-      --- Control
-      pc_src: out bit; -- branch & zero
       --- Data
       read_data: out bit_vector(31 downto 0)
    );
@@ -302,13 +296,13 @@ signal EX_read_data_2: bit_vector(31 downto 0);
 signal EX_imm: bit_vector(31 downto 0);
 signal EX_funct7: bit_vector(6 downto 0);
 signal EX_funct3: bit_vector(2 downto 0);
-signal EX_zero: bit;
 signal EX_branch_pc: bit_vector(31 downto 0);
 signal EX_alu_result: bit_vector(31 downto 0);
+signal EX_pc_src: bit;
+signal EX_branch: bit;
 --- Pass thrgouth
 signal EX_read_register_1: bit_vector(4 downto 0);
 signal EX_read_register_2: bit_vector(4 downto 0);
-signal EX_branch: bit;
 signal EX_mem_read: bit;
 signal EX_mem_write: bit;
 signal EX_reg_write: bit;
@@ -318,8 +312,6 @@ signal EX_opcode: bit_vector(6 downto 0);
 
 -- MEM
 --- Uses
-signal MEM_branch: bit;
-signal MEM_zero: bit;
 signal MEM_mem_read: bit;
 signal MEM_mem_write: bit;
 signal MEM_alu_result: bit_vector(31 downto 0); -- address memory
@@ -405,7 +397,7 @@ hazard_detection_unit_inst: hazard_detection_unit
     -- Output
     pc_write => HZ_pc_write,
     buffer_write_if_id => HZ_buffer_write_if_id,
-    stall => HZ_flush
+    stall => HZ_stall
   );
 
 core_decode_inst: core_decode
@@ -535,13 +527,14 @@ core_execute_inst: core_execute
    port map(
       alu_src => EX_alu_src,
       alu_op => EX_alu_op,
+      branch => EX_branch,
       pc => EX_pc,
       read_data_1 => FW_ula_a,
       read_data_2 => FW_ula_b,
       imm => EX_imm,
       funct7 => EX_funct7,
       funct3 => EX_funct3,
-      zero => EX_zero,
+      pc_src => EX_pc_src,
       branch_pc => EX_branch_pc,
       alu_result => EX_alu_result
    );
@@ -551,8 +544,8 @@ buffer_ex_mem_inst: buffer_ex_mem
     clk => clk,
     rst => rst,
     
-    EX_branch => EX_branch,
-    MEM_branch => MEM_branch,
+    EX_pc_src => EX_pc_src,
+    MEM_pc_src => MEM_pc_src,
 
     EX_mem_read => EX_mem_read,
     MEM_mem_read => MEM_mem_read,
@@ -565,9 +558,6 @@ buffer_ex_mem_inst: buffer_ex_mem
 
     EX_mem_to_reg => EX_mem_to_reg,
     MEM_mem_to_reg => MEM_mem_to_reg,
-
-    EX_zero => EX_zero,
-    MEM_zero => MEM_zero,
 
     EX_branch_pc => EX_branch_pc,
     MEM_branch_pc => MEM_branch_pc,
@@ -587,16 +577,12 @@ core_memory_acess_inst: core_memory_acess
       clk => clk,
       -- Input
       --- Control
-      branch => MEM_branch,
-      zero => MEM_zero,
       mem_read => MEM_mem_read,
       mem_write => MEM_mem_write,
       --- Data
       alu_result => MEM_alu_result,
       read_data_2 => MEM_read_data_2,
       -- Output
-      --- Control
-      pc_src => MEM_pc_src,
       --- Data
       read_data => MEM_read_data
    );

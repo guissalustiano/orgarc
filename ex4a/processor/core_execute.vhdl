@@ -7,6 +7,7 @@ entity core_execute is
       --- Control
       alu_src: in bit;
       alu_op: in bit_vector(1 downto 0);
+      branch: in bit;
       --- Data 
       pc: in bit_vector(31 downto 0);
       read_data_1: in bit_vector(31 downto 0);
@@ -17,7 +18,7 @@ entity core_execute is
 
       -- Output
       --- Control
-      zero: out bit;
+      pc_src: out bit;
       --- Data
       branch_pc: out bit_vector(31 downto 0); -- soma do pc com o immediato para o calculo do branch
       alu_result: out bit_vector(31 downto 0)
@@ -48,8 +49,10 @@ architecture arch of core_execute is
 
   signal alu_input_2: bit_vector(31 downto 0);
   signal alu_ctrl: bit_vector(3 downto 0);
+  signal zero: bit;
 begin
   branch_pc <= bit_vector(unsigned(pc) + unsigned(imm));
+  pc_src <= branch and zero;
 
   alu_input_2 <= read_data_2 when alu_src = '0' else imm;
 

@@ -13,7 +13,7 @@ entity reg_enable is
   );
 end entity;
 
-architecture arch of reg is
+architecture arch of reg_enable is
   signal value: bit_vector(size-1 downto 0);
 begin
   process(clk, rst)

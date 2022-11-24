@@ -3,16 +3,12 @@ entity core_memory_acess is
       clk: in bit;
       -- Input
       --- Control
-      branch: in bit;
-      zero: in bit;
       mem_read: in bit;
       mem_write: in bit;
       --- Data
       alu_result: in bit_vector(31 downto 0); -- address memory
       read_data_2: in bit_vector(31 downto 0); -- write data memory
       -- Output
-      --- Control
-      pc_src: out bit; -- branch & zero
       --- Data
       read_data: out bit_vector(31 downto 0)
    );
@@ -30,8 +26,6 @@ architecture arch of core_memory_acess is
      );
    end component;
 begin
-  pc_src <= branch and zero;
-
   ram_inst: ram 
     port map(
         clk => clk,
