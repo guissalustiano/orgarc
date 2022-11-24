@@ -366,6 +366,8 @@ signal HZ_mem_write: bit;
 signal HZ_reg_write: bit;
 signal HZ_mem_to_reg: bit;
 
+signal flush_wrong_branch: bit;
+
 begin
 
 core_fetch_inst: core_fetch
@@ -388,7 +390,7 @@ buffer_if_id_inst: buffer_if_id
   port map(
     clk => clk,
     rst => rst,
-    flush => '0',
+    flush => flush_wrong_branch,
     enable => HZ_buffer_write_if_id,
     
     IF_pc => IF_pc,
@@ -455,7 +457,7 @@ buffer_id_ex_inst: buffer_id_ex
   port map(
     clk => clk,
     rst => rst,
-    flush => '0',
+    flush => flush_wrong_branch,
     enable => '1',
     
     -- Control
@@ -552,6 +554,8 @@ core_execute_inst: core_execute
       branch_pc => EX_branch_pc,
       alu_result => EX_alu_result
    );
+
+flush_wrong_branch <= '1' when EX_pc_src='1' else '0';
 
 buffer_ex_mem_inst: buffer_ex_mem
   port map(
