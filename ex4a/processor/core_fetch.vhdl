@@ -18,17 +18,19 @@ entity core_fetch is
 end entity;
 
 architecture arch of core_fetch is
-component reg_enable is
-  generic(
-    size: natural := 32
-  );
-  port(
-    clk, rst: in bit;
-    en: in bit;
-    d: in bit_vector(size-1 downto 0);
-    q: out bit_vector(size-1 downto 0)
-  );
-end component;
+component reg is
+    generic(
+      size: natural := 32
+    );
+    port(
+      clk: in bit;
+      rst: in bit; -- reset sincrono
+      clr: in bit; -- reset assincrono
+      en: in bit; -- enable
+      d: in bit_vector(size-1 downto 0);
+      q: out bit_vector(size-1 downto 0)
+    );
+  end component;
 
 component rom is
    generic(
@@ -44,10 +46,11 @@ end component;
 
 signal internal_pc, pc_plus_4, next_pc: bit_vector(31 downto 0);
 begin
-    reg_pc: reg_enable
+    reg_pc: reg
       port map(
         clk => clk, 
-        rst => rst,
+        clr => rst,
+        rst => '0',
         en => pc_enable,
         d => next_pc,
         q => internal_pc
