@@ -352,27 +352,13 @@ signal FW_src_ula_b: bit_vector(1 downto 0);
 signal FW_ula_a: bit_vector(31 downto 0);
 signal FW_ula_b: bit_vector(31 downto 0);
 
--- Hazard detection
-signal HZ_pc_write: bit;
-signal HZ_buffer_write_if_id: bit;
-signal HZ_stall: bit;
-
---- Control unit
-signal HZ_alu_src: bit;
-signal HZ_alu_op: bit_vector(1 downto 0);
-signal HZ_branch: bit;
-signal HZ_mem_read: bit;
-signal HZ_mem_write: bit;
-signal HZ_reg_write: bit;
-signal HZ_mem_to_reg: bit;
-
 begin
 
 core_fetch_inst: core_fetch
    port map(
       clk => clk,
       rst => rst,
-      pc_enable => HZ_pc_write,
+      pc_enable => '1',
       -- Input
       --- Control
       pc_src => MEM_pc_src,
@@ -389,27 +375,13 @@ buffer_if_id_inst: buffer_if_id
     clk => clk,
     rst => rst,
     flush => '0',
-    enable => HZ_buffer_write_if_id,
+    enable => '1',
     
     IF_pc => IF_pc,
     ID_pc => ID_pc,
 
     IF_instruction => IF_instruction,
     ID_instruction => ID_instruction
-  );
-
-hazard_detection_unit_inst: hazard_detection_unit
-  port map(
-    -- Input
-    EX_mem_read => EX_mem_read,
-    EX_write_register => EX_write_register,
-    ID_read_register_1 => ID_read_register_1,
-    ID_read_register_2 => ID_read_register_1,
-
-    -- Output
-    pc_write => HZ_pc_write,
-    buffer_write_if_id => HZ_buffer_write_if_id,
-    stall => HZ_stall
   );
 
 core_decode_inst: core_decode
@@ -442,15 +414,6 @@ core_decode_inst: core_decode
       write_register => ID_write_register
    );
 
--- if has hazard then ground all control signals
- HZ_alu_src <= ID_alu_src when HZ_stall = '0' else '0';
- HZ_alu_op <= ID_alu_op when HZ_stall = '0' else "00";
- HZ_branch <= ID_branch when HZ_stall = '0' else '0';
- HZ_mem_read <= ID_mem_read when HZ_stall = '0' else '0';
- HZ_mem_write <= ID_mem_write when HZ_stall = '0' else '0';
- HZ_reg_write <= ID_reg_write when HZ_stall = '0' else '0';
- HZ_mem_to_reg <= ID_mem_to_reg when HZ_stall = '0' else '0';
-
 buffer_id_ex_inst: buffer_id_ex
   port map(
     clk => clk,
@@ -459,25 +422,25 @@ buffer_id_ex_inst: buffer_id_ex
     enable => '1',
     
     -- Control
-    ID_alu_src => HZ_alu_src,
+    ID_alu_src => ID_alu_src,
     EX_alu_src => EX_alu_src,
 
-    ID_alu_op => HZ_alu_op,
+    ID_alu_op => ID_alu_op,
     EX_alu_op => EX_alu_op,
 
-    ID_branch => HZ_branch,
+    ID_branch => ID_branch,
     EX_branch => EX_branch,
 
-    ID_mem_read => HZ_mem_read,
+    ID_mem_read => ID_mem_read,
     EX_mem_read => EX_mem_read,
 
-    ID_mem_write => HZ_mem_write,
+    ID_mem_write => ID_mem_write,
     EX_mem_write => EX_mem_write,
 
-    ID_reg_write => HZ_reg_write,
+    ID_reg_write => ID_reg_write,
     EX_reg_write => EX_reg_write,
 
-    ID_mem_to_reg => HZ_mem_to_reg,
+    ID_mem_to_reg => ID_mem_to_reg,
     EX_mem_to_reg => EX_mem_to_reg,
 
     --- Data 
