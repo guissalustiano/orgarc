@@ -278,8 +278,6 @@ signal IF_pc: bit_vector(31 downto 0);
 signal IF_instruction: bit_vector(31 downto 0);
 
 -- ID
-signal ID_pc: bit_vector(31 downto 0);
-signal ID_instruction: bit_vector(31 downto 0);
 signal ID_alu_src: bit;
 signal ID_alu_op: bit_vector(1 downto 0);
 signal ID_branch: bit;
@@ -295,52 +293,20 @@ signal ID_imm: bit_vector(31 downto 0);
 signal ID_funct7: bit_vector(6 downto 0);
 signal ID_funct3: bit_vector(2 downto 0);
 signal ID_write_register: bit_vector(4 downto 0);
-signal ID_opcode: bit_vector(6 downto 0);
 
 
 --- Uses
-signal EX_alu_src: bit;
-signal EX_alu_op: bit_vector(1 downto 0);
-signal EX_pc: bit_vector(31 downto 0);
-signal EX_read_data_1: bit_vector(31 downto 0);
-signal EX_read_data_2: bit_vector(31 downto 0);
-signal EX_imm: bit_vector(31 downto 0);
-signal EX_funct7: bit_vector(6 downto 0);
-signal EX_funct3: bit_vector(2 downto 0);
 signal EX_branch_pc: bit_vector(31 downto 0);
 signal EX_alu_result: bit_vector(31 downto 0);
 signal EX_pc_src: bit;
-signal EX_branch: bit;
---- Pass thrgouth
-signal EX_read_register_1: bit_vector(4 downto 0);
-signal EX_read_register_2: bit_vector(4 downto 0);
-signal EX_mem_read: bit;
-signal EX_mem_write: bit;
-signal EX_reg_write: bit;
-signal EX_mem_to_reg: bit;
-signal EX_write_register: bit_vector(4 downto 0);
-signal EX_opcode: bit_vector(6 downto 0);
 
 -- MEM
 --- Uses
-signal MEM_mem_read: bit;
-signal MEM_mem_write: bit;
-signal MEM_alu_result: bit_vector(31 downto 0); -- address memory
-signal MEM_read_data_2: bit_vector(31 downto 0); -- write data memory
 signal MEM_pc_src: bit; -- branch & zero
 signal MEM_read_data: bit_vector(31 downto 0);
---- Pass through
-signal MEM_reg_write: bit;
-signal MEM_to_reg: bit;
-signal MEM_mem_to_reg: bit;
-signal MEM_write_register: bit_vector(4 downto 0);
-signal MEM_branch_pc: bit_vector(31 downto 0);
 
 -- WB
 --- Uses
-signal WB_mem_to_reg: bit;
-signal WB_read_data: bit_vector(31 downto 0);
-signal WB_alu_result: bit_vector(31 downto 0);
 signal WB_write_data: bit_vector(31 downto 0);
 --- Pass through
 signal WB_reg_write: bit;
@@ -357,33 +323,19 @@ core_fetch_inst: core_fetch
       --- Control
       pc_src => MEM_pc_src,
       --- Data
-      branch_pc => MEM_branch_pc,
+      branch_pc => EX_branch_pc,
 
       -- Output
       pc => IF_pc,
       instruction => IF_instruction
    );
 
-buffer_if_id_inst: buffer_if_id
-  port map(
-    clk => clk,
-    rst => rst,
-    flush => '0',
-    enable => '1',
-    
-    IF_pc => IF_pc,
-    ID_pc => ID_pc,
-
-    IF_instruction => IF_instruction,
-    ID_instruction => ID_instruction
-  );
-
 core_decode_inst: core_decode
    port map(
       clk => clk,
       rst => rst,
       --- Inputs
-      instruction => ID_instruction,
+      instruction => IF_instruction,
       WB_write_register => WB_write_register,
       WB_write_data => WB_write_data,
       WB_reg_write => WB_reg_write,
@@ -408,162 +360,42 @@ core_decode_inst: core_decode
       write_register => ID_write_register
    );
 
-buffer_id_ex_inst: buffer_id_ex
-  port map(
-    clk => clk,
-    rst => rst,
-    flush => '0',
-    enable => '1',
-    
-    -- Control
-    ID_alu_src => ID_alu_src,
-    EX_alu_src => EX_alu_src,
-
-    ID_alu_op => ID_alu_op,
-    EX_alu_op => EX_alu_op,
-
-    ID_branch => ID_branch,
-    EX_branch => EX_branch,
-
-    ID_mem_read => ID_mem_read,
-    EX_mem_read => EX_mem_read,
-
-    ID_mem_write => ID_mem_write,
-    EX_mem_write => EX_mem_write,
-
-    ID_reg_write => ID_reg_write,
-    EX_reg_write => EX_reg_write,
-
-    ID_mem_to_reg => ID_mem_to_reg,
-    EX_mem_to_reg => EX_mem_to_reg,
-
-    --- Data 
-    ID_pc => ID_pc,
-    EX_pc => EX_pc,
-
-    ID_read_register_1 => ID_read_register_1,
-    EX_read_register_1 => EX_read_register_1,
-
-    ID_read_register_2 => ID_read_register_2,
-    EX_read_register_2 => EX_read_register_2,
-
-    ID_read_data_1 => ID_read_data_1,
-    EX_read_data_1 => EX_read_data_1,
-
-    ID_read_data_2 => ID_read_data_2,
-    EX_read_data_2 => EX_read_data_2,
-
-    ID_imm => ID_imm,
-    EX_imm => EX_imm,
-
-    ID_funct7 => ID_funct7,
-    EX_funct7 => EX_funct7,
-
-    ID_funct3 => ID_funct3,
-    EX_funct3 => EX_funct3,
-
-    -- useless
-    ID_opcode => ID_opcode,
-    EX_opcode => EX_opcode,
-
-    ID_write_register => ID_write_register,
-    EX_write_register => EX_write_register
-  );
-
 core_execute_inst: core_execute
    port map(
-      alu_src => EX_alu_src,
-      alu_op => EX_alu_op,
-      branch => EX_branch,
-      pc => EX_pc,
-      read_data_1 => EX_read_data_1,
-      read_data_2 => EX_read_data_2,
-      imm => EX_imm,
-      funct7 => EX_funct7,
-      funct3 => EX_funct3,
+      alu_src => ID_alu_src,
+      alu_op => ID_alu_op,
+      branch => ID_branch,
+      pc => IF_pc,
+      read_data_1 => ID_read_data_1,
+      read_data_2 => ID_read_data_2,
+      imm => ID_imm,
+      funct7 => ID_funct7,
+      funct3 => ID_funct3,
       pc_src => EX_pc_src,
       branch_pc => EX_branch_pc,
       alu_result => EX_alu_result
    );
-
-buffer_ex_mem_inst: buffer_ex_mem
-  port map(
-    clk => clk,
-    rst => rst,
-    flush => '0',
-    enable => '1',
-    
-    EX_pc_src => EX_pc_src,
-    MEM_pc_src => MEM_pc_src,
-
-    EX_mem_read => EX_mem_read,
-    MEM_mem_read => MEM_mem_read,
-
-    EX_mem_write => EX_mem_write,
-    MEM_mem_write => MEM_mem_write,
-
-    EX_reg_write => EX_reg_write,
-    MEM_reg_write => MEM_reg_write,
-
-    EX_mem_to_reg => EX_mem_to_reg,
-    MEM_mem_to_reg => MEM_mem_to_reg,
-
-    EX_branch_pc => EX_branch_pc,
-    MEM_branch_pc => MEM_branch_pc,
-
-    EX_alu_result => EX_alu_result,
-    MEM_alu_result => MEM_alu_result,
-
-    EX_read_data_2 => EX_read_data_2,
-    MEM_read_data_2 => MEM_read_data_2,
-
-    EX_write_register => EX_write_register,
-    MEM_write_register => MEM_write_register
-  );
 
 core_memory_acess_inst: core_memory_acess
    port map(
       clk => clk,
       -- Input
       --- Control
-      mem_read => MEM_mem_read,
-      mem_write => MEM_mem_write,
+      mem_read => ID_mem_read,
+      mem_write => ID_mem_write,
       --- Data
-      alu_result => MEM_alu_result,
-      read_data_2 => MEM_read_data_2,
+      alu_result => EX_alu_result,
+      read_data_2 => ID_read_data_2,
       -- Output
       --- Data
       read_data => MEM_read_data
    );
 
-buffer_mem_wb_inst: buffer_mem_wb
-  port map(
-    clk => clk,
-    rst => rst,
-    flush => '0',
-    enable => '1',
-    
-    MEM_reg_write => MEM_reg_write,
-    WB_reg_write => WB_reg_write,
-
-    MEM_mem_to_reg => MEM_mem_to_reg,
-    WB_mem_to_reg => WB_mem_to_reg,
-
-    MEM_read_data => MEM_read_data,
-    WB_read_data => WB_read_data,
-
-    MEM_alu_result => MEM_alu_result,
-    WB_alu_result => WB_alu_result,
-
-    MEM_write_register => MEM_write_register,
-    WB_write_register => WB_write_register
-  );
-
 core_write_back_inst: core_write_back
    port map(
-    mem_to_reg => WB_mem_to_reg,
-    read_data => WB_read_data,
-    alu_result => WB_alu_result,
+    mem_to_reg => ID_mem_to_reg,
+    read_data => MEM_read_data,
+    alu_result => EX_alu_result,
     write_data => WB_write_data
    );
 
