@@ -346,12 +346,6 @@ signal WB_write_data: bit_vector(31 downto 0);
 signal WB_reg_write: bit;
 signal WB_write_register: bit_vector(4 downto 0);
 
--- Fowarding
-signal FW_src_ula_a: bit_vector(1 downto 0);
-signal FW_src_ula_b: bit_vector(1 downto 0);
-signal FW_ula_a: bit_vector(31 downto 0);
-signal FW_ula_b: bit_vector(31 downto 0);
-
 begin
 
 core_fetch_inst: core_fetch
@@ -476,38 +470,14 @@ buffer_id_ex_inst: buffer_id_ex
     EX_write_register => EX_write_register
   );
 
-fowarding_unit_inst: fowarding_unit
-  port map(
-    -- Inputs
-    EX_read_register_1 => EX_read_register_1,
-    EX_read_register_2 => EX_read_register_2,
-    MEM_reg_write => MEM_reg_write,
-    MEM_write_register => MEM_write_register,
-    WB_write_register => WB_write_register,
-
-    -- Outputs
-    foward_ula_input_a => FW_src_ula_a,
-    foward_ula_input_b => FW_src_ula_b
-  );
-
-  FW_ula_a <= EX_read_data_1 when FW_src_ula_a = "00" else
-              WB_write_data  when FW_src_ula_a = "01" else
-              MEM_alu_result when FW_src_ula_a = "10" else -- address
-              (others => '0');
-
-  FW_ula_b <= EX_read_data_2 when FW_src_ula_b = "00" else
-              WB_write_data  when FW_src_ula_b = "01" else
-              MEM_alu_result when FW_src_ula_b = "10" else -- address
-              (others => '0');
-
 core_execute_inst: core_execute
    port map(
       alu_src => EX_alu_src,
       alu_op => EX_alu_op,
       branch => EX_branch,
       pc => EX_pc,
-      read_data_1 => FW_ula_a,
-      read_data_2 => FW_ula_b,
+      read_data_1 => EX_read_data_1,
+      read_data_2 => EX_read_data_2,
       imm => EX_imm,
       funct7 => EX_funct7,
       funct3 => EX_funct3,
